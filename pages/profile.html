@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <form class="search-bar">
+                <input type="text" placeholder="Search products..." />
+                <button type="submit">Search</button>
+            </form>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="headphones.html">Headphones</a></li>
+                    <li><a href="speakers.html">Speakers</a></li>
+                    <li><a href="amplifiers.html">Amplifiers</a></li>
+                    <li><a href="accessories.html">Accessories</a></li>
+                    <li><a href="guitars.html">Guitars</a></li>
+                   
+                </ul>
+                <div class="nav-icons">
+                    <a href="cart.html"><img src="../images/cart_icon.png" alt="Cart Icon" style="width: 25px;"></a>
+                     <!-- Add logout-link here-->
+                    <a href="#" id="logout-link">Logout</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-tabs">
+            <button class="tab-button active" data-tab="orders">Orders</button>
+            <button class="tab-button" data-tab="edit">Edit</button>
+        </div>
+
+        <div class="profile-content">
+            <div id="orders" class="tab-content">
+                <div class="order-history">
+                    <h3>Orders</h3>
+                    <div id="order-list">
+                        <p>No orders yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="edit" class="tab-content hidden">
+                <h3>Edit profile</h3>
+                <form id="edit-profile-form" class="edit-profile-form">
+                    <label for="name">Username</label>
+                    <input type="text" id="name" />
+
+                    <label for="email">Email</label>
+                    <input type="email" id="email" />
+
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="********" />
+
+                    <button type="submit">Save</button>
+                    <p id="profile-message" style="color: green;"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h3>COMPANY INFO</h3>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Shipping & Returns</a></li>
+                    <li><a href="#">Terms & Privacy Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>SHOP</h3>
+                <ul>
+                    <li><a href="#">Mommy & Me</a></li>
+                    <li><a href="#">Books & Media</a></li>
+                    <li><a href="#">Daddy & Me</a></li>
+                    <li><a href="#">Gift Certificate</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>MY ACCOUNT</h3>
+                <ul>
+                    <li><a href="#">My Account</a></li>
+                    <li><a href="#">Login</a></li>
+                    <li><a href="#">Signup</a></li>
+                    <li><a href="#">Order Status</a></li>
+                    <li><a href="#">View Cart</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Wish Lists</a></li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h3>Get in Touch</h3>
+                <a>support@minime.com</a>
+            </div>
+            <div class="payment-logos">
+                <p>Copyright 2023 ZalupaCustoms all rights reserved</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script>
+       // Функция для обновления имени пользователя в навбаре (здесь, в profile.html)
+        function updateUserName(username) {
+          const userLink = document.getElementById('user-link'); // Или любой другой элемент, где вы отображаете имя пользователя
+          if (userLink) {
+            userLink.textContent = username;
+           }
+        }
+        const profileMessage = document.getElementById('profile-message');
+       
+        const loadScript = (src) => {
+          return new Promise((resolve, reject) => {
+               const script = document.createElement('script');
+               script.src = src;
+               script.onload = resolve;
+                script.onerror = reject;
+               document.head.appendChild(script);
+          })
+        }
+async function handleUpdateProfile(event) {
+   event.preventDefault();
+    const user = localStorage.getItem('user');
+     if (!user) {
+       alert('Please log in to edit profile.');
+          return;
+     }
+     const userData = JSON.parse(user);
+   const username = document.getElementById('name').value;
+     const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+    
+    const updateData = {};
+     if(username !== userData.username){
+        updateData.username = username;
+      }
+      if (email !== userData.email){
+          updateData.email = email;
+      }
+     if (password) {
+        updateData.password = password;
+    }
+     if (Object.keys(updateData).length === 0) {
+        profileMessage.textContent = 'No changes to update.';
+          setTimeout(() => {
+              profileMessage.textContent = '';
+            }, 5000);
+          return;
+    }
+  try {
+     const response = await fetch('http://localhost:5000/api/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+         },
+        body: JSON.stringify({ id: userData.id, ...updateData }),
+     });
+       if (response.ok) {
+          const data = await response.json();
+           localStorage.setItem('user', JSON.stringify(data.user));
+           updateUserName(data.user.username);
+            profileMessage.textContent = 'Profile updated successfully!';
+             setTimeout(() => {
+                 profileMessage.textContent = '';
+               }, 5000);
+            } else {
+            const errorData = await response.json();
+              console.error('Failed to update profile:', errorData);
+              profileMessage.textContent = 'Failed to update profile.';
+             setTimeout(() => {
+                profileMessage.textContent = '';
+                }, 5000);
+           }
+       } catch (error) {
+         console.error('Error updating profile', error);
+          profileMessage.textContent = 'Error updating profile.';
+          setTimeout(() => {
+              profileMessage.textContent = '';
+             }, 5000);
+    }
+}
+        async function fetchOrderHistory() {
+      const orderListDiv = document.getElementById('order-list');
+     const user = localStorage.getItem('user');
+    if (!user) {
+      orderListDiv.innerHTML = '<p>Please log in to view orders.</p>';
+      return;
+      }
+
+       const userData = JSON.parse(user);
+      try {
+        const response = await fetch(`http://localhost:5000/api/orders/${userData.id}`);
+         if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+          }
+        const orders = await response.json();
+        if (orders.length === 0) {
+            orderListDiv.innerHTML = '<p>No orders yet.</p>';
+            return;
+        }
+        orderListDiv.innerHTML = '';
+
+        orders.forEach(order => {
+        const orderDiv = document.createElement('div');
+          orderDiv.classList.add('order');
+            const orderDate = new Date(order.order_date);
+            const formattedDate = orderDate.toLocaleDateString();
+
+            let orderItemsHtml = '';
+             order.items.forEach(item => {
+                  orderItemsHtml += `
+                   <div class="order-item">
+                     <img src="${item.image_url}" alt="${item.name}" style="width: 50px;">
+                      <p>${item.name}</p>
+                      <p>$${item.price}</p>
+                    </div>
+                  `;
+               });
+               orderDiv.innerHTML = `
+                <p><strong>Order №:</strong> ${order.id}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                 <p><strong>Total:</strong> $${order.total_amount}</p>
+                 <p><strong>Status:</strong> ${order.status}</p>
+                 <div class="order-items-list">${orderItemsHtml}</div>
+            `;
+               orderListDiv.appendChild(orderDiv);
+       });
+    } catch (error) {
+         console.error('Error fetching order history:', error);
+        orderListDiv.innerHTML = '<p>Error loading order history.</p>';
+        }
+    }
+    async function init() {
+          await loadScript('../script.js');
+
+           // Ваш существующий код DOMContentLoaded
+          const user = localStorage.getItem('user');
+            if (user) {
+                 const userData = JSON.parse(user);
+                updateUserName(userData.username);
+               document.getElementById('name').value = userData.username;
+              document.getElementById('email').value = userData.email;
+            }
+          const logoutLink = document.getElementById('logout-link');
+            if(logoutLink){
+             logoutLink.addEventListener('click', handleLogout);
+             }
+           
+            fetchOrderHistory();
+           const editForm = document.getElementById('edit-profile-form'); // Получаем форму по ID
+             editForm.addEventListener('submit', handleUpdateProfile);
+      }
+          init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+    <link rel="stylesheet" href="../style.css">
+     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+     <header>
+        <div class="container">
+           <form class="search-bar">
+            <input type="text" placeholder="Search products..." />
+            <button type="submit">Search</button>
+         </form>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="headphones.html">Headphones</a></li>
+                    <li><a href="amplifiers.html">Amplifiers</a></li>
+                    <li><a href="accessories.html">Accessories</a></li>
+                    <li><a href="guitars.html">Guitars</a></li>
+                    <li id="profile-link-container" style="display: none;"><a href="profile.html" id="profile-link">Profile</a></li>
+                    <li id="register-link-container"><a href="../register.html" id="register-link">Register</a></li>
+                      <li id="logout-link-container" style="display: none;"><a href="#" id="logout-link">Logout</a></li>
+                </ul>
+                  <div class="nav-icons">
+              </div>
+            </nav>
+        </div>
+    </header>
+    <section class="products">
+         <div class="container">
+             <h2>Cart</h2>
+             <div id="cart-items">
+                <p>Your cart is currently empty.</p>
+            </div>
+            <button id="checkout-button" style="display:none;">Checkout</button>
+        </div>
+    </section>
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h3>COMPANY INFO</h3>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Shipping & Returns</a></li>
+                     <li><a href="#">Terms & Privacy Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>SHOP</h3>
+                <ul>
+                    <li><a href="#">Mommy & Me</a></li>
+                     <li><a href="#">Books & Media</a></li>
+                     <li><a href="#">Daddy & Me</a></li>
+                    <li><a href="#">Gift Certificate</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>MY ACCOUNT</h3>
+                <ul>
+                     <li><a href="#">My Account</a></li>
+                    <li><a href="#">Login</a></li>
+                     <li><a href="#">Signup</a></li>
+                     <li><a href="#">Order Status</a></li>
+                    <li><a href="#">View Cart</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Wish Lists</a></li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h3>Get in Touch</h3>
+                 <a>support@minime.com</a>
+            </div>
+            <div class="payment-logos">
+                 <p>Copyright 2023 ZalupaCustoms all rights reserved</p>
+            </div>
+        </div>
+    </footer>
+        <script>
+            function updateUserName(username) {
+            const profileLink = document.getElementById('profile-link');
+            const profileLinkContainer = document.getElementById('profile-link-container');
+            const registerLinkContainer = document.getElementById('register-link-container');
+            const logoutLinkContainer = document.getElementById('logout-link-container');
+            if (profileLink && username) {
+                profileLink.textContent = username;
+                 profileLinkContainer.style.display = 'block';
+                 registerLinkContainer.style.display = 'none';
+                logoutLinkContainer.style.display = 'block';
+            } else {
+                profileLinkContainer.style.display = 'none';
+                logoutLinkContainer.style.display = 'none';
+            }
+        }
+         function handleLogout() {
+            localStorage.removeItem('user');
+            const profileLink = document.getElementById('profile-link');
+             const profileLinkContainer = document.getElementById('profile-link-container');
+               const registerLinkContainer = document.getElementById('register-link-container');
+                const logoutLinkContainer = document.getElementById('logout-link-container');
+            profileLink.textContent = 'Profile';
+             profileLinkContainer.style.display = 'none';
+               registerLinkContainer.style.display = 'block';
+             logoutLinkContainer.style.display = 'none';
+            window.location.href = '../index.html';
+        }
+
+        async function removeFromCart(itemId) {
+          try {
+            const response = await fetch(`http://localhost:5000/api/cart/remove/${itemId}`, {
+              method: 'DELETE',
+           });
+
+           if (response.ok) {
+             console.log('Product removed from cart successfully.');
+             fetchCartItems();
+           } else {
+             const errorData = await response.json();
+            console.error('Failed to remove product from cart:', errorData);
+          }
+         } catch (error) {
+          console.error('Error removing product from cart', error);
+         }
+        }
+         async function fetchCartItems() {
+          const cartItemsContainer = document.getElementById('cart-items');
+         const user = localStorage.getItem('user');
+            if (!user) {
+                cartItemsContainer.innerHTML = '<p>Please log in to view cart.</p>';
+                return;
+            }
+             const userData = JSON.parse(user);
+                try {
+                   const response = await fetch(`http://localhost:5000/api/cart/${userData.id}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                   }
+                  const cartItems = await response.json();
+                    if (cartItems.length === 0) {
+                      cartItemsContainer.innerHTML = '<p>Your cart is currently empty.</p>';
+                       return;
+                    }
+                    cartItemsContainer.innerHTML = '';
+
+                    cartItems.forEach(item => {
+                       const productDiv = document.createElement('div');
+                        productDiv.classList.add('product');
+                      productDiv.innerHTML = `
+                             <img src="${item.image_url}" alt="${item.name}">
+                             <h3>${item.name}</h3>
+                             <p>$${item.price}</p>
+                              <button class="btn remove-from-cart" data-item-id="${item.id}">Remove</button>
+                        `;
+                       cartItemsContainer.appendChild(productDiv);
+                        const removeButton = productDiv.querySelector('.remove-from-cart');
+                        removeButton.addEventListener('click', function () {
+                            removeFromCart(item.id);
+                       });
+                    });
+
+                } catch (error) {
+                 console.error('Error fetching cart items:', error);
+                 cartItemsContainer.innerHTML = '<p>Error loading cart items.</p>';
+               }
+
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = localStorage.getItem('user');
+
+            if (user) {
+                const userData = JSON.parse(user);
+                updateUserName(userData.username);
+            }
+             const logoutLink = document.getElementById('logout-link');
+            logoutLink.addEventListener('click',handleLogout);
+              fetchCartItems();
+
+        });
+
+        async function checkout() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please log in to place an order.');
+                 return;
+             }
+             const userData = JSON.parse(user);
+              try {
+                 const response = await fetch('http://localhost:5000/api/orders/create', {
+                   method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ userId: userData.id }),
+                  });
+                 if (response.ok) {
+                      alert('Order placed successfully!');
+                      fetchCartItems();
+                    } else {
+                       const errorData = await response.json();
+                        console.error('Failed to create order:', errorData);
+                     }
+                 } catch (error) {
+                    console.error('Error creating order', error);
+                  }
+         }
+        async function fetchCartItems() {
+          const cartItemsContainer = document.getElementById('cart-items');
+         const user = localStorage.getItem('user');
+        const checkoutButton = document.getElementById('checkout-button');
+            if (!user) {
+                cartItemsContainer.innerHTML = '<p>Please log in to view cart.</p>';
+                 checkoutButton.style.display = 'none';
+                return;
+            }
+             const userData = JSON.parse(user);
+                try {
+                   const response = await fetch(`http://localhost:5000/api/cart/${userData.id}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                   }
+                  const cartItems = await response.json();
+                    if (cartItems.length === 0) {
+                      cartItemsContainer.innerHTML = '<p>Your cart is currently empty.</p>';
+                      checkoutButton.style.display = 'none';
+                       return;
+                    }
+                    cartItemsContainer.innerHTML = '';
+                      checkoutButton.style.display = 'block';
+
+                    cartItems.forEach(item => {
+                       const productDiv = document.createElement('div');
+                        productDiv.classList.add('product');
+                      productDiv.innerHTML = `
+                             <img src="${item.image_url}" alt="${item.name}">
+                             <h3>${item.name}</h3>
+                             <p>$${item.price}</p>
+                              <button class="btn remove-from-cart" data-item-id="${item.id}">Remove</button>
+                        `;
+                       cartItemsContainer.appendChild(productDiv);
+                        const removeButton = productDiv.querySelector('.remove-from-cart');
+                        removeButton.addEventListener('click', function () {
+                            removeFromCart(item.id);
+                       });
+                    });
+
+                } catch (error) {
+                 console.error('Error fetching cart items:', error);
+                 cartItemsContainer.innerHTML = '<p>Error loading cart items.</p>';
+                 checkoutButton.style.display = 'none';
+               }
+
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = localStorage.getItem('user');
+
+            if (user) {
+                const userData = JSON.parse(user);
+                updateUserName(userData.username);
+            }
+             const logoutLink = document.getElementById('logout-link');
+            logoutLink.addEventListener('click',handleLogout);
+              fetchCartItems();
+           const checkoutButton = document.getElementById('checkout-button');
+            checkoutButton.addEventListener('click', checkout);
+
+        });
+    </script>
+</body>
+</html>

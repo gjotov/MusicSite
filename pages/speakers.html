@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speakers</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <form class="search-bar">
+                <input type="text" placeholder="Search products..." />
+                <button type="submit">Search</button>
+            </form>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="headphones.html">Headphones</a></li>
+                    <li><a href="amplifiers.html">Amplifiers</a></li>
+                    <li><a href="accessories.html">Accessories</a></li>
+                    <li><a href="guitars.html">Guitars</a></li>
+                     <li id="profile-link-container" style="display: none;"><a href="profile.html" id="profile-link">Profile</a></li>
+                    <li id="register-link-container"><a href="../register.html" id="register-link">Register</a></li>
+                      <li id="logout-link-container" style="display: none;"><a href="#" id="logout-link">Logout</a></li>
+                </ul>
+                <div class="nav-icons">
+                    <a href="cart.html"><img src="../images/cart_icon.png" alt="Cart Icon" style="width: 45px; margin-left: 500px;"></a>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <section class="products">
+        <div class="container">
+            <h2>Speakers</h2>
+            <div class="product-grid" id="product-list">
+                <!-- Speakers will be loaded here -->
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container footer-content">
+            <div class="footer-section">
+                <h3>COMPANY INFO</h3>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Shipping & Returns</a></li>
+                    <li><a href="#">Terms & Privacy Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>SHOP</h3>
+                <ul>
+                    <li><a href="#">Mommy & Me</a></li>
+                    <li><a href="#">Books & Media</a></li>
+                    <li><a href="#">Daddy & Me</a></li>
+                    <li><a href="#">Gift Certificate</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>MY ACCOUNT</h3>
+                <ul>
+                    <li><a href="#">My Account</a></li>
+                    <li><a href="#">Login</a></li>
+                    <li><a href="#">Signup</a></li>
+                    <li><a href="#">Order Status</a></li>
+                    <li><a href="#">View Cart</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Wish Lists</a></li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h3>Get in Touch</h3>
+                <a>support@minime.com</a>
+            </div>
+            <div class="payment-logos">
+                <p>Copyright 2023 ZalupaCustoms all rights reserved</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function updateUserName(username) {
+            const profileLink = document.getElementById('profile-link');
+             const profileLinkContainer = document.getElementById('profile-link-container');
+            const registerLinkContainer = document.getElementById('register-link-container');
+            const logoutLinkContainer = document.getElementById('logout-link-container');
+            if (profileLink && username) {
+                profileLink.textContent = username;
+                 profileLinkContainer.style.display = 'block';
+                registerLinkContainer.style.display = 'none';
+                logoutLinkContainer.style.display = 'block';
+            } else {
+                profileLinkContainer.style.display = 'none';
+                 logoutLinkContainer.style.display = 'none';
+            }
+        }
+        function handleLogout() {
+            localStorage.removeItem('user');
+            const profileLink = document.getElementById('profile-link');
+             const profileLinkContainer = document.getElementById('profile-link-container');
+               const registerLinkContainer = document.getElementById('register-link-container');
+                const logoutLinkContainer = document.getElementById('logout-link-container');
+            profileLink.textContent = 'Profile';
+             profileLinkContainer.style.display = 'none';
+               registerLinkContainer.style.display = 'block';
+             logoutLinkContainer.style.display = 'none';
+            window.location.href = '../index.html';
+        }
+        async function addToCart(product) {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please log in to add items to cart.');
+                return;
+            }
+            const userData = JSON.parse(user);
+            try {
+                const response = await fetch('http://localhost:5000/api/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId: userData.id, productId: product.id }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Product added to cart:', data.cartItem);
+                } else {
+                    const errorData = await response.json();
+                    console.error('Failed to add product to cart:', errorData);
+                }
+            } catch (error) {
+                console.error('Error adding product to cart', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = localStorage.getItem('user');
+             if (user) {
+                const userData = JSON.parse(user);
+                updateUserName(userData.username);
+            }
+              const logoutLink = document.getElementById('logout-link');
+            logoutLink.addEventListener('click',handleLogout);
+            const productList = document.getElementById('product-list');
+            try {
+                const response = await fetch('http://localhost:5000/api/products');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const products = await response.json();
+
+                // Filter products by category 'speakers'
+                const speakers = products.filter(product => product.category === 'speakers');
+
+                speakers.forEach(product => {
+                    const productDiv = document.createElement('div');
+                    productDiv.classList.add('product');
+                    productDiv.innerHTML = `
+                        <img src="${product.image_url}" alt="${product.name}">
+                        <h3>${product.name}</h3>
+                        <p>$${product.price}</p>
+                        <button class="btn add-to-cart" data-product-id="${product.id}">Add to cart</button>
+                    `;
+                    productList.appendChild(productDiv);
+                    const addToCartButton = productDiv.querySelector('.add-to-cart');
+                     addToCartButton.addEventListener('click', function() {
+                            addToCart(product);
+                        });
+                });
+            } catch (error) {
+                console.error('Ошибка получения данных:', error);
+                productList.innerHTML = '<p>Ошибка загрузки товаров. Пожалуйста, попробуйте позже.</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>
